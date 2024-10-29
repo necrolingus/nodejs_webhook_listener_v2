@@ -1,0 +1,8 @@
+version: "3"
+services:
+  nodejs_dynamic_rest_endpoints:
+    image: ghcr.io/necrolingus/nodejs_webhook_listener_v2:latest
+    restart: unless-stopped
+    env_file: stack.env
+    ports:
+      - 8081:3000
