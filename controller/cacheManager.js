@@ -31,4 +31,16 @@ function cacheGet (webhookEndpoint) {
     return existingData
 }
 
-export {cacheSet, cacheDelete, cacheAdd, cacheGet}
+function cacheGetAll () {
+    const allData = {}
+    const allKeys = localCache.keys()
+    
+    for (const k of allKeys) {
+        allData[k] = {}
+        allData[k] = cacheGet(k)
+    }
+    console.log(allData)
+    return allData
+}
+
+export {cacheSet, cacheDelete, cacheAdd, cacheGet, cacheGetAll}

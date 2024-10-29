@@ -1,5 +1,6 @@
-import { cacheSet, cacheDelete, cacheAdd, cacheGet } from '../controller/cacheManager.js'
+import { cacheSet, cacheDelete, cacheAdd, cacheGet, cacheGetAll } from '../controller/cacheManager.js'
 import { generateJsonData } from '../controller/cacheJson.js'
+import { config } from "../controller/config.js";
 
 import express from 'express'
 const router = express.Router();
@@ -64,6 +65,19 @@ router.get("/:webhookid", async function (req, res) {
         return res.status(204).send()
     }
     return res.status(200).send(cacheData)
+});
+
+
+// Admin endpoint to see all endpoints
+router.get('/admin/get-all-data', (req, res) => {
+    const adminKey = req.headers['admin-key'];
+
+    if (adminKey !== config.adminKey) {
+        return res.status(403).json({ error: "Unauthorized access" });
+    }
+
+    const allData = cacheGetAll()
+    return res.status(200).send(allData)
 });
 
 
