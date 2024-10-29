@@ -1,4 +1,5 @@
 import { localCache } from '../controller/cacheInstance.js'
+import { config } from "./config.js";
 
 function cacheSet (webhookEndpoint) {
     localCache.set(webhookEndpoint, [])
@@ -18,7 +19,7 @@ function cacheAdd (webhookEndpoint, jsonData) {
 
     const existingData = localCache.get(webhookEndpoint) //returns an arry
     const arrLength = existingData.unshift(jsonData) //adds the new data to the array, and returns the length of the array
-    if (arrLength > 50){
+    if (arrLength > config.max_items){
         existingData.pop()
     }
     const outcome = localCache.set(webhookEndpoint, existingData)

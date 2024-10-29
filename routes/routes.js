@@ -37,7 +37,7 @@ router.delete("/delete-endpoint/:webhookid", async function (req, res) {
     const delOutcome = cacheDelete(webhookEndpoint)
 
     if (delOutcome === 0) {
-        return res.status(204).send()
+        return res.status(404).send()
     } else {
         return res.status(200).send(`Webhook endpoint ID deleted`)
     }
@@ -56,7 +56,7 @@ router.get("/:webhookid", async function (req, res) {
 
     //cache key has not been defined yet
     if (cacheData === undefined){
-        return res.status(204).send()
+        return res.status(404).send()
     }
 
     //cache key has been defined but there are no records in cache for it
