@@ -1,0 +1,27 @@
+name: build_docker_image
+
+on:
+  workflow_dispatch:
+
+jobs:
+  login_build_push:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      -
+        name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}  #this token is auto generated for you
+      -
+        name: Checkout Before Build
+        uses: actions/checkout@v3
+      -    
+        name: Build Image
+        run: |
+              docker build . --tag ghcr.io/${{github.actor}}/${{ github.event.repository.name }}:latest
+              docker push ghcr.io/${{github.actor}}/${{ github.event.repository.name }}:latest
