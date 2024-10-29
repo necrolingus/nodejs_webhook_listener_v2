@@ -35,7 +35,7 @@ https://webhooklistener.leighonline.net 🎉🥳🎊🎁
    - And even Cookies! 🍪🍪🍪
 - **Deployment Flexibility**: Run locally or in Docker 🐳
 - **Clean up**: When you're done, delete your entire cache key with only 1 request 🗑️
-- **Admin endpoint**: Admin endpoint to check out all the data 🚒
+- **Admin endpoint**: So you can check out all the data 🚒
 
 <br />
 
