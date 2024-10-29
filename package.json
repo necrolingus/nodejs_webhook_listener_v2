@@ -1,0 +1,17 @@
+{
+  "name": "nodejs_webhook_listener_v2",
+  "version": "1.0.0",
+  "description": "Stores webhook calls so you can view them later on",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.1",
+    "node-cache": "^5.1.2",
+    "uuid": "^11.0.1"
+  }
+}
