@@ -24,7 +24,7 @@ https://webhooklistener.leighonline.net 🎉🥳🎊🎁
 
 ## 🌟 **Features**
 - **Capture multiple HTTP Verbs**: PUT, POST, PATCH, DELETE and check them out to see what got sent to you.
-- **Project Segregation**: Use `myUniqueKey` to separate your projects 🗂️.
+- **Project Segregation**: Use `myUniqueKey` to separate your projects 🗂️
 - **Customizable Cache**: 
    - Decide how long to cache and how many requests to keep 🕒
 - **Store all the data**:
@@ -33,9 +33,9 @@ https://webhooklistener.leighonline.net 🎉🥳🎊🎁
    - Query parameters
    - The request Body
    - And even Cookies! 🍪🍪🍪
-- **Deployment Flexibility**: Run locally or in Docker 🐳.
-- **Clean up**: When you're done, delete your entire cache key with only 1 request 🗑️.
-- **Admin endpoint**: Admin endpoint to check out all the data 🚒.
+- **Deployment Flexibility**: Run locally or in Docker 🐳
+- **Clean up**: When you're done, delete your entire cache key with only 1 request 🗑️
+- **Admin endpoint**: Admin endpoint to check out all the data 🚒
 
 <br />
 
