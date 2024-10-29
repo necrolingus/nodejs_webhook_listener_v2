@@ -1,0 +1,2 @@
+To build it locally
+docker build -f dockerfile . --tag nodejs_webhook_listener_v2:latest --no-cache
