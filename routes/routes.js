@@ -46,12 +46,13 @@ router.delete("/delete-endpoint/:webhookid", async function (req, res) {
 
 //add data to cache
 router.post("/:webhookid", handleCacheAdd);
+router.get("/:webhookid", handleCacheAdd);
 router.put("/:webhookid", handleCacheAdd);
 router.patch("/:webhookid", handleCacheAdd);
 router.delete("/:webhookid", handleCacheAdd);
 
 //get all the data for a key
-router.get("/:webhookid", async function (req, res) {
+router.get("/:webhookid/cached-data", async function (req, res) {
     const webhookEndpoint = req.params.webhookid
     const cacheData = cacheGet(webhookEndpoint)
 
