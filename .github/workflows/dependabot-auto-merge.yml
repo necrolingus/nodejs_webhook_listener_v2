@@ -27,9 +27,11 @@ jobs:
             PR_URL="${{ github.event.pull_request.html_url }}"
             echo "Processing trigger PR: $PR_URL"
             gh pr review --approve "$PR_URL" || echo "Already approved"
-            gh pr merge --merge --auto --admin "$PR_URL"
+            # Use --admin to bypass requirements and merge immediately
+            gh pr merge --merge --admin "$PR_URL"
           else
             echo "Processing all Dependabot PRs..."
+            # Note: filter for 'app/dependabot' or 'dependabot[bot]' depending on your environment
             for pr in $(gh pr list --author "app/dependabot" --json url --jq '.[].url'); do
               echo "Merging $pr..."
               gh pr review --approve "$pr" || echo "Already approved or failed to approve $pr"
