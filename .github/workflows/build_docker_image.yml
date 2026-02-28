@@ -1,7 +1,9 @@
 name: build_docker_image
 
 on:
-  workflow_dispatch:
+  schedule:
+    - cron: '08 3 * * *'
+  workflow_dispatch: 
 
 jobs:
   login_build_push:
@@ -10,18 +12,45 @@ jobs:
       packages: write
       contents: read
     steps:
-      -
-        name: Login to GitHub Container Registry
+      - name: Checkout Latest
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1 
+
+      - name: Fetch History (Last 24h)
+        run: git fetch --shallow-since="24 hours ago"
+
+      - name: Check for recent changes
+        id: check_changes
+        run: |
+          # Count commits since 24 hours ago
+          COMMIT_COUNT=$(git rev-list --count HEAD --since="24 hours ago")
+          
+          if [ "$COMMIT_COUNT" -gt 0 ]; then
+            echo "Found $COMMIT_COUNT commits. Proceeding with build."
+            echo "should_build=true" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "Manual trigger detected. Proceeding with build."
+            echo "should_build=true" >> $GITHUB_OUTPUT
+          else
+            echo "No changes in the last 24 hours. Skipping build."
+            echo "should_build=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Login to GitHub Container Registry
+        if: steps.check_changes.outputs.should_build == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}  #this token is auto generated for you
-      -
-        name: Checkout Before Build
-        uses: actions/checkout@v3
-      -    
-        name: Build Image
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Image
+        if: steps.check_changes.outputs.should_build == 'true'
         run: |
-              docker build . --tag ghcr.io/${{github.actor}}/${{ github.event.repository.name }}:latest
-              docker push ghcr.io/${{github.actor}}/${{ github.event.repository.name }}:latest
+          # Define tag variables for cleaner code
+          IMAGE_NAME="ghcr.io/${{ github.actor }}/${{ github.event.repository.name }}"
+          
+          echo "Building $IMAGE_NAME:latest..."
+          docker build . --tag "$IMAGE_NAME:latest"
+          docker push "$IMAGE_NAME:latest"
