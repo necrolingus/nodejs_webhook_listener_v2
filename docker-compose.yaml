@@ -6,7 +6,7 @@ services:
     env_file: 
       - .env
     expose:
-      - 3000
+      - 3088
     networks:
         - internal_proxy
 
