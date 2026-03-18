@@ -1,0 +1,37 @@
+<div class="page-header">
+  <h1>Settings</h1>
+</div>
+
+{{#if success}}
+  <div class="alert alert--success">Settings updated successfully.</div>
+{{/if}}
+
+<div class="card">
+  <h3>Recovery Token</h3>
+  <p>Save this token to recover your account if your cookie expires.</p>
+  <div class="token-display">
+    <code id="recoveryToken">{{user.recovery_token}}</code>
+    <button class="btn btn--sm btn--accent" onclick="copyToClipboard('recoveryToken')">Copy</button>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Display Name</h3>
+  <form method="POST" action="/settings">
+    <div class="form-group">
+      <label for="display_name">Name</label>
+      <input type="text" id="display_name" name="display_name" class="form-input" value="{{user.display_name}}" placeholder="Enter a display name" maxlength="100">
+    </div>
+    <button type="submit" class="btn btn--primary">Save</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Account Info</h3>
+  <div class="info-grid">
+    <div class="info-item">
+      <span class="info-item__label">Account Created</span>
+      <span class="info-item__value">{{formatDate user.created_at}}</span>
+    </div>
+  </div>
+</div>

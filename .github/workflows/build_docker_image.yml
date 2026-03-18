@@ -1,0 +1,62 @@
+name: build_docker_image
+
+on:
+  schedule:
+    # Runs at 11:51 UTC every day
+    - cron: '51 11 * * *'
+  workflow_dispatch: 
+
+jobs:
+  login_build_push:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - name: Check for recent commits via API
+        id: check_changes
+        run: |
+          # Calculate timestamp for 24 hours ago (ISO 8601)
+          SINCE=$(date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ)
+          
+          # Query GitHub API for commits since that timestamp
+          RESPONSE=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/commits?since=$SINCE")
+          
+          # Count elements in the returned JSON array
+          COMMIT_COUNT=$(echo "$RESPONSE" | jq '. | length')
+
+          if [ "$COMMIT_COUNT" -gt 0 ]; then
+            echo "Found $COMMIT_COUNT commits in the last 24h. Proceeding."
+            echo "should_build=true" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "Manual trigger detected. Proceeding."
+            echo "should_build=true" >> $GITHUB_OUTPUT
+          else
+            echo "No changes in the last 24h. Skipping."
+            echo "should_build=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout Code
+        if: steps.check_changes.outputs.should_build == 'true'
+        uses: actions/checkout@v4
+        # We only need the current state for the Docker build
+        with:
+          fetch-depth: 1
+
+      - name: Login to GitHub Container Registry
+        if: steps.check_changes.outputs.should_build == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Image
+        if: steps.check_changes.outputs.should_build == 'true'
+        run: |
+          IMAGE_NAME="ghcr.io/${{ github.actor }}/${{ github.event.repository.name }}"
+          
+          echo "Building $IMAGE_NAME:latest..."
+          docker build . --tag "$IMAGE_NAME:latest"
+          docker push "$IMAGE_NAME:latest"

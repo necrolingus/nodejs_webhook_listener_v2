@@ -1,0 +1,9 @@
+<div class="error-page">
+  <h1>Error</h1>
+  <p>{{message}}</p>
+  {{#if user}}
+    <a href="/dashboard" class="btn btn--primary">Back to Dashboard</a>
+  {{else}}
+    <a href="/login" class="btn btn--primary">Go to Login</a>
+  {{/if}}
+</div>

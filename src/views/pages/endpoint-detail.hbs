@@ -1,0 +1,97 @@
+<div class="page-header">
+  <div>
+    <a href="/dashboard" class="btn btn--sm btn--ghost back-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to Dashboard
+    </a>
+    <h1>{{#if endpoint.label}}{{endpoint.label}}{{else}}Endpoint{{/if}}</h1>
+    <p class="page-header__sub">Key: <code class="code-inline">{{endpoint.endpoint_key}}</code></p>
+  </div>
+  <button class="btn btn--danger" onclick="deleteEndpoint('{{endpoint.endpoint_key}}', true)">Delete Endpoint</button>
+</div>
+
+<div class="card card--url">
+  <label>Webhook URL</label>
+  <div class="url-display">
+    <code id="webhookUrl">{{webhookUrl}}</code>
+    <button class="btn btn--sm btn--accent" onclick="copyToClipboard('webhookUrl')">Copy</button>
+  </div>
+  <p class="url-display__hint">Send POST, GET, PUT, PATCH, or DELETE requests to this URL</p>
+</div>
+
+<div class="webhook-list-header">
+  <h2>Received Webhooks <span class="badge">{{total}}</span></h2>
+  {{#if (gt total 10)}}
+    <button class="btn btn--sm btn--ghost" onclick="keepLastWebhooks('{{endpoint.endpoint_key}}', 10)">Keep Last 10</button>
+  {{/if}}
+</div>
+
+{{#if webhooks.length}}
+  <div class="webhook-list">
+    {{#each webhooks}}
+      <div class="webhook-card" data-id="{{this.id}}">
+        <div class="webhook-card__header" onclick="toggleWebhook(this)">
+          <div class="webhook-card__meta">
+            <span class="method-badge method-badge--{{lower (upper this.http_method)}}">{{upper this.http_method}}</span>
+            <span class="webhook-card__host">{{this.source_host}}</span>
+            <span class="webhook-card__time">{{formatDate this.received_at}}</span>
+          </div>
+          <div class="webhook-card__actions">
+            <button class="btn btn--sm btn--ghost" onclick="event.stopPropagation(); deleteWebhook('{{../endpoint.endpoint_key}}', {{this.id}}, this)">Delete</button>
+            <svg class="webhook-card__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </div>
+        </div>
+        <div class="webhook-card__body" style="display:none;">
+          <div class="webhook-data">
+            <div class="webhook-data__section">
+              <h4>Headers</h4>
+              <pre class="json-display"><code>{{json this.headers}}</code></pre>
+            </div>
+            {{#if this.query_params}}
+              <div class="webhook-data__section">
+                <h4>Query Parameters</h4>
+                <pre class="json-display"><code>{{json this.query_params}}</code></pre>
+              </div>
+            {{/if}}
+            {{#if this.cookies}}
+              <div class="webhook-data__section">
+                <h4>Cookies</h4>
+                <pre class="json-display"><code>{{json this.cookies}}</code></pre>
+              </div>
+            {{/if}}
+            {{#if this.body}}
+              <div class="webhook-data__section">
+                <h4>Body</h4>
+                <pre class="json-display"><code>{{json this.body}}</code></pre>
+              </div>
+            {{/if}}
+          </div>
+        </div>
+      </div>
+    {{/each}}
+  </div>
+
+  {{#if (gt pages 1)}}
+    <div class="pagination">
+      {{#if (gt page 1)}}
+        <a href="?page={{subtract page 1}}" class="btn btn--sm btn--ghost">&laquo; Prev</a>
+      {{/if}}
+      {{#each (range 1 pages)}}
+        <a href="?page={{this}}" class="btn btn--sm {{#if (eq this ../page)}}btn--accent{{else}}btn--ghost{{/if}}">{{this}}</a>
+      {{/each}}
+      {{#if (lt page pages)}}
+        <a href="?page={{add page 1}}" class="btn btn--sm btn--ghost">Next &raquo;</a>
+      {{/if}}
+    </div>
+  {{/if}}
+{{else}}
+  <div class="empty-state">
+    <svg class="empty-state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <h3>No webhooks received yet</h3>
+    <p>Send a request to the webhook URL above to start capturing data.</p>
+  </div>
+{{/if}}

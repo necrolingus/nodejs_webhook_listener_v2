@@ -1,16 +1,26 @@
 {
   "name": "nodejs_webhook_listener_v2",
-  "version": "1.0.0",
-  "description": "Stores webhook calls so you can view them later on",
-  "main": "index.js",
+  "version": "2.0.0",
+  "description": "Webhook listener with persistent storage, cookie-based auth, and web UI",
+  "main": "src/server.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test --test-force-exit --test-concurrency=1 test/config.test.js test/models/userModel.test.js test/models/sessionModel.test.js test/models/endpointModel.test.js test/models/webhookModel.test.js test/middleware/auth.test.js test/routes/webhookReceiver.test.js test/routes/apiRoutes.test.js test/routes/pageRoutes.test.js test/auth/loginFlow.test.js",
+    "migrate": "node src/db/migrate.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.4.5",
     "express": "^4.21.1",
-    "node-cache": "^5.1.2"
+    "express-handlebars": "^8.0.1",
+    "pg": "^8.13.1",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "supertest": "^7.0.0"
   }
 }

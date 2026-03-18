@@ -1,8 +1,22 @@
 version: "3"
 services:
-  nodejs_webhook_listener:
+  webhook_listener:
     image: ghcr.io/necrolingus/nodejs_webhook_listener_v2:latest
     restart: unless-stopped
-    env_file: stack.env
-    ports:
-      - 8081:3000
+    env_file: 
+      - .env
+    expose:
+      - 3000
+    networks:
+        - internal_proxy
+
+  webhook_listener_db:
+      image: postgres:17.2-alpine3.21
+      restart: unless-stopped
+      env_file: 
+        - .env
+      shm_size: 96mb
+      volumes:
+        - postgresdata_wl:/var/lib/postgresql/data
+      networks:
+        - internal_proxy

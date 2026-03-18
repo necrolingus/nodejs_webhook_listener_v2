@@ -1,0 +1,63 @@
+<div class="page-header">
+  <h1>Dashboard</h1>
+  <button class="btn btn--primary" id="createEndpointBtn">+ New Endpoint</button>
+</div>
+
+<div id="createEndpointForm" class="card card--form" style="display:none;">
+  <h3>Create New Endpoint</h3>
+  <div class="form-group">
+    <label for="endpointLabel">Label (optional)</label>
+    <input type="text" id="endpointLabel" class="form-input" placeholder="Give your endpoint a name">
+  </div>
+  <div class="form-actions">
+    <button class="btn btn--primary" id="submitEndpoint">Create</button>
+    <button class="btn btn--ghost" id="cancelEndpoint">Cancel</button>
+  </div>
+</div>
+
+{{#if endpoints.length}}
+  <div class="table-wrapper">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Endpoint</th>
+          <th>Endpoint Key</th>
+          <th>Request Count</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each endpoints}}
+          <tr>
+            <td>
+              <a href="/endpoints/{{this.endpoint_key}}" class="link">
+                {{#if this.label}}{{this.label}}{{else}}{{this.endpoint_key}}{{/if}}
+              </a>
+            </td>
+            <td>
+              <code class="code-inline">{{this.endpoint_key}}</code>
+            </td>
+            <td>
+              <span class="badge">{{this.webhook_count}}</span>
+            </td>
+            <td>{{formatDate this.created_at}}</td>
+            <td>
+              <button class="btn btn--sm btn--danger" onclick="deleteEndpoint('{{this.endpoint_key}}')">Delete</button>
+            </td>
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+{{else}}
+  <div class="empty-state">
+    <svg class="empty-state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="17 8 12 3 7 8"/>
+      <line x1="12" y1="3" x2="12" y2="15"/>
+    </svg>
+    <h3>No endpoints yet</h3>
+    <p>Create your first endpoint to start capturing webhooks.</p>
+  </div>
+{{/if}}

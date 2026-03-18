@@ -1,0 +1,45 @@
+<div class="login-page">
+  <div class="login-hero">
+    <h1 class="login-hero__title">Webhook Listener</h1>
+    <p class="login-hero__subtitle">Capture, inspect, and debug webhook requests in real-time</p>
+  </div>
+
+  {{#if recoveryToken}}
+    <div class="card card--highlight login-card">
+      <h2>Account Created!</h2>
+      <p>Save this recovery token. You will need it to recover your account if your cookie expires or you switch browsers.</p>
+      <div class="token-display">
+        <code id="recoveryToken">{{recoveryToken}}</code>
+        <button class="btn btn--sm btn--accent" onclick="copyToClipboard('recoveryToken')">Copy</button>
+      </div>
+      <a href="/dashboard" class="btn btn--primary btn--block">Go to Dashboard</a>
+    </div>
+  {{else}}
+    <div class="login-cards">
+      <div class="card login-card">
+        <h2>Get Started</h2>
+        <p>Create a new account with a cookie-based session. No email or password needed.</p>
+        <form method="POST" action="/login">
+          <input type="hidden" name="action" value="create">
+          <button type="submit" class="btn btn--primary btn--block">Login with Cookie</button>
+        </form>
+      </div>
+
+      <div class="card login-card">
+        <h2>Recover Account</h2>
+        <p>Already have an account? Enter your recovery token to get back in.</p>
+        {{#if error}}
+          <div class="alert alert--danger">{{error}}</div>
+        {{/if}}
+        <form method="POST" action="/login">
+          <input type="hidden" name="action" value="recover">
+          <div class="form-group">
+            <label for="recovery_token">Recovery Token</label>
+            <input type="text" id="recovery_token" name="recovery_token" class="form-input" placeholder="Enter your 12-character token" maxlength="64" required>
+          </div>
+          <button type="submit" class="btn btn--accent btn--block">Recover Account</button>
+        </form>
+      </div>
+    </div>
+  {{/if}}
+</div>

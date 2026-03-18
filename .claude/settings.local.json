@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:dep.leighonline.net)",
+      "WebFetch(domain:sus.leighonline.net)",
+      "Bash(npm install:*)",
+      "Bash(node -e \"console.log\\(require\\(''crypto''\\).randomBytes\\(32\\).toString\\(''hex''\\)\\)\")"
+    ]
+  }
+}
