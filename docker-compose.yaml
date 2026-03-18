@@ -1,4 +1,3 @@
-version: "3"
 services:
   webhook_listener:
     image: ghcr.io/necrolingus/nodejs_webhook_listener_v2:latest
@@ -20,3 +19,10 @@ services:
         - postgresdata_wl:/var/lib/postgresql/data
       networks:
         - internal_proxy
+
+networks:
+  internal_proxy:
+    external: true
+
+volumes:
+  postgresdata_wl:
