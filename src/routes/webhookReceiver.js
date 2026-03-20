@@ -25,7 +25,18 @@ async function handleWebhook(req, res) {
 
   await deleteOldWebhooks(endpoint.id, config.maxItemsPerEndpoint);
 
-  res.status(200).json({ status: 'received' });
+  const statusCode = endpoint.response_code || 200;
+  if (endpoint.response_body) {
+    // Try to parse as JSON, otherwise send as plain text
+    try {
+      const parsed = JSON.parse(endpoint.response_body);
+      res.status(statusCode).json(parsed);
+    } catch {
+      res.status(statusCode).type('text').send(endpoint.response_body);
+    }
+  } else {
+    res.status(statusCode).json({ status: 'received' });
+  }
 }
 
 router.post('/:key', handleWebhook);

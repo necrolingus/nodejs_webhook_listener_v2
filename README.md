@@ -1,53 +1,76 @@
 # Webhook Listener v2
 
-A self-hosted webhook listener with a web UI, persistent PostgreSQL storage, and cookie-based authentication. Create endpoints, receive webhooks from any service, and inspect the captured requests (headers, body, query params, cookies) through a dark-themed dashboard.
+A self-hosted webhook listener with a dark-themed web UI, cookie-based authentication, and PostgreSQL storage. Create endpoints, send webhooks to them from any service, and inspect the captured requests in real time.
 
 ## Features
 
-- **Webhook capture** - Accepts GET, POST, PUT, PATCH, DELETE on generated endpoint URLs and stores the full request
-- **Web UI** - Dark-themed dashboard to create endpoints, browse captured requests, and manage your account
-- **Cookie-based auth** - No username or password required. Click "Login with Cookie" to get started. A recovery token lets you reclaim your data if the cookie expires
-- **PostgreSQL storage** - All data persisted in Postgres with `tbl_wl_` prefixed tables
-- **Configurable limits** - Max endpoints per user and max stored requests per endpoint
-- **Admin API** - Optional admin endpoint to query all data across users
+- **Cookie-based auth** — no passwords. Click "Login with Cookie" to get started. A recovery token lets you reclaim your data if the cookie expires.
+- **Persistent storage** — all data lives in PostgreSQL (tables prefixed `tbl_wl_`).
+- **Web UI** — dark theme, collapsible sidebar, desktop-first layout.
+- **Multi-endpoint** — create up to 20 endpoints per user (configurable).
+- **Request capture** — captures headers, cookies, query params, and body for GET, POST, PUT, PATCH, and DELETE.
+- **History management** — auto-trims to the last N requests per endpoint. Manual "Keep Last 10" button available.
+- **Admin API** — optional admin endpoint for retrieving all data across users.
+- **Docker-ready** — ships with a Dockerfile and docker-compose.yaml.
 
 ## Quick Start
 
 ### Prerequisites
 
-- Node.js 22+
+- Node.js 20+
 - PostgreSQL 15+
 
-### Setup
+### 1. Clone and install
 
 ```bash
-# Install dependencies
+git clone https://github.com/necrolingus/nodejs_webhook_listener_v2.git
+cd nodejs_webhook_listener_v2
 npm install
+```
 
-# Copy and edit the environment file
+### 2. Configure environment
+
+```bash
 cp .env.example .env
-# Edit .env with your database credentials and desired settings
+```
 
-# Run database migrations
+Edit `.env` with your values (see [Environment Variables](#environment-variables) below).
+
+### 3. Run database migration
+
+The migration runs automatically on startup, but you can also run it manually:
+
+```bash
 npm run migrate
+```
 
-# Start the server
+### 4. Start the server
+
+```bash
+# Production
 npm start
 
-# Or start in watch mode for development
+# Development (auto-reload on file changes)
 npm run dev
 ```
 
-The app will be available at `http://localhost:<WL_PORT>`.
+Open `http://localhost:<WL_PORT>` in your browser.
 
-### Docker
+## Docker
+
+### docker-compose (recommended)
 
 ```bash
-# Build the image
-docker build -t webhook-listener .
+docker-compose up -d
+```
 
-# Or use docker compose (expects an external network called internal_proxy)
-docker compose up -d
+This starts both the webhook listener and a PostgreSQL instance. Make sure your `.env` file is configured — the compose file passes it to both containers.
+
+### Dockerfile only
+
+```bash
+docker build -t webhook-listener .
+docker run --env-file .env -p 3088:3088 webhook-listener
 ```
 
 ## Environment Variables
@@ -55,86 +78,119 @@ docker compose up -d
 | Variable | Description | Default |
 |---|---|---|
 | `WL_PORT` | Port the server listens on | `3000` |
-| `WL_MAX_ITEMS_PER_ENDPOINT` | Max stored requests per endpoint (oldest are pruned) | `50` |
-| `WL_MAX_ENDPOINTS_PER_USER` | Max endpoints a single user can create | `20` |
+| `WL_MAX_ITEMS_PER_ENDPOINT` | Max stored requests per endpoint (oldest auto-trimmed) | `50` |
+| `WL_MAX_ENDPOINTS_PER_USER` | Max endpoints a user can create | `20` |
 | `WL_COOKIE_NAME` | Name of the session cookie | `wl_session` |
 | `WL_COOKIE_MAX_AGE_DAYS` | Session cookie lifetime in days | `30` |
-| `WL_COOKIE_SECRET` | Secret used to sign cookies (change this!) | - |
+| `WL_COOKIE_SECRET` | Secret used to sign cookies — **change this** | — |
 | `DB_HOST` | PostgreSQL host | `localhost` |
 | `DB_PORT` | PostgreSQL port | `5432` |
 | `DB_NAME` | PostgreSQL database name | `postgres` |
 | `DB_USER` | PostgreSQL user | `postgres` |
-| `DB_PASS` | PostgreSQL password | - |
-| `POSTGRES_USER` | Used by the Postgres Docker container on first start (set same as `DB_USER`) | - |
-| `POSTGRES_PASSWORD` | Used by the Postgres Docker container on first start (set same as `DB_PASS`) | - |
-| `WL_ADMIN_KEY` | Secret key for the admin API (see below) | empty (disabled) |
+| `DB_PASS` | PostgreSQL password | — |
+| `POSTGRES_USER` | Used by the postgres Docker image on first start (set same as `DB_USER`) | — |
+| `POSTGRES_PASSWORD` | Used by the postgres Docker image on first start (set same as `DB_PASS`) | — |
+| `WL_ADMIN_KEY` | API key for the admin endpoint (see below) | *(empty — admin endpoint disabled)* |
 
-## Admin API
+## Admin API (`WL_ADMIN_KEY`)
 
-The admin endpoint `GET /api/admin/data` returns all endpoints across all users along with their webhook counts and owner display names. It is protected by the `WL_ADMIN_KEY` environment variable.
+The admin endpoint provides a read-only view of all endpoints across all users, including webhook counts and owner display names. This is useful for monitoring, external dashboards, or automation that needs visibility into all webhook activity.
 
-**How it works:**
-
-- If `WL_ADMIN_KEY` is empty or not set, the endpoint is **disabled** and returns `403 Unauthorized` for all requests.
-- If `WL_ADMIN_KEY` is set to a value, requests must include an `admin-key` header matching that exact value.
-
-```bash
-# Example usage
-curl -H "admin-key: your-secret-key" http://localhost:3088/api/admin/data
+```
+GET /api/admin/data
 ```
 
-This is useful for monitoring or building external dashboards that need visibility into all webhook activity on the instance.
+**Header required:**
+
+```
+admin-key: <your WL_ADMIN_KEY value>
+```
+
+- If `WL_ADMIN_KEY` is **empty or not set**, the admin endpoint is **disabled** and rejects all requests.
+- Set it to a strong random string in your `.env` to enable it.
+
+Example:
+
+```bash
+curl -H "admin-key: my-secret-key" http://localhost:3088/api/admin/data
+```
 
 ## Sending Webhooks
 
-Once you create an endpoint in the dashboard, you get a unique URL:
+Once you create an endpoint in the UI, you get a unique endpoint key. Send requests to:
 
 ```
-http://your-host:3088/webhooks/a1b2c3d4e5f6g7h8
+POST   /webhooks/<endpoint_key>
+GET    /webhooks/<endpoint_key>
+PUT    /webhooks/<endpoint_key>
+PATCH  /webhooks/<endpoint_key>
+DELETE /webhooks/<endpoint_key>
 ```
 
-Point any service (GitHub, Stripe, etc.) at that URL. The listener accepts any HTTP method and stores the full request for you to inspect.
+The listener captures the HTTP method, headers, cookies, query parameters, and request body, then stores them in the database.
+
+Example:
+
+```bash
+curl -X POST http://localhost:3088/webhooks/abc123 \
+  -H "Content-Type: application/json" \
+  -d '{"event": "order.created", "id": 42}'
+```
+
+## Authentication Flow
+
+1. **First visit** — click "Login with Cookie" to create an account. A session cookie is set and a recovery token is displayed.
+2. **Save your recovery token** — this is the only way to recover your data if the cookie expires or you switch browsers.
+3. **Cookie expires** — after 30 days (configurable), go to the login page and enter your recovery token under "Recover Account". A new session is created and linked to all your existing data.
+4. **Settings** — view your recovery token and set a display name from the Settings page.
+
+## API Endpoints
+
+| Method | Route | Auth | Description |
+|---|---|---|---|
+| `POST` | `/api/endpoints` | Cookie | Create a new endpoint |
+| `GET` | `/api/endpoints` | Cookie | List your endpoints |
+| `DELETE` | `/api/endpoints/:key` | Cookie | Delete an endpoint |
+| `GET` | `/api/endpoints/:key/webhooks` | Cookie | List webhooks (paginated) |
+| `DELETE` | `/api/endpoints/:key/webhooks/:id` | Cookie | Delete a single webhook |
+| `POST` | `/api/endpoints/:key/webhooks/keep-last` | Cookie | Keep only the last N webhooks |
+| `GET` | `/api/admin/data` | Admin key | Get all endpoints and users |
 
 ## Database Schema
 
 All tables are prefixed with `tbl_wl_`:
 
-| Table | Purpose |
-|---|---|
-| `tbl_wl_users` | User accounts with recovery tokens |
-| `tbl_wl_sessions` | Active session cookies (auto-cleaned hourly) |
-| `tbl_wl_endpoints` | Webhook endpoints owned by users |
-| `tbl_wl_webhooks` | Captured webhook requests (headers, body, query params, cookies) |
+- **tbl_wl_users** — user accounts with recovery tokens
+- **tbl_wl_sessions** — active sessions tied to users
+- **tbl_wl_endpoints** — webhook endpoints owned by users
+- **tbl_wl_webhooks** — captured webhook requests (headers, cookies, query params, body stored as JSONB)
+
+The schema auto-migrates on startup using `src/db/schema.sql`.
 
 ## Running Tests
-
-Tests use the Node.js built-in test runner and require a running PostgreSQL instance.
 
 ```bash
 npm test
 ```
 
+Tests use the Node.js built-in test runner with `supertest`. They run against your configured PostgreSQL database, so make sure it is accessible.
+
 ## Project Structure
 
 ```
 src/
-  config/       - Environment config
-  db/           - Database pool, schema, migrations
-  middleware/   - Auth and header middleware
-  models/       - Data access layer (users, sessions, endpoints, webhooks)
-  routes/       - Express routers (pages, API, webhook receiver)
-  views/        - Handlebars templates (layouts, partials, pages)
-  public/       - Static assets (CSS, JS)
-  app.js        - Express app setup
-  server.js     - Entry point
-test/           - Test suite
+  config/       Configuration (reads from .env)
+  db/           Database pool, schema, migration
+  middleware/   Auth and header middleware
+  models/       Data access layer (users, sessions, endpoints, webhooks)
+  routes/       Express routers (pages, API, webhook receiver)
+  views/        Handlebars templates (layouts, partials, pages)
+  public/       Static assets (CSS, JS)
+  app.js        Express app setup
+  server.js     Entry point
+test/           Test suite
 ```
 
-## Tech Stack
+## License
 
-- **Runtime** - Node.js 
-- **Framework** - Express
-- **Templates** - Handlebars (express-handlebars)
-- **Database** - PostgreSQL (pg)
-- **Auth** - Cookie-based sessions with recovery tokens
-- **Tests** - Node.js built-in test runner + supertest
+ISC

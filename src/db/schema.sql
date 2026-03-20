@@ -25,9 +25,14 @@ CREATE TABLE IF NOT EXISTS tbl_wl_endpoints (
     user_id       INTEGER NOT NULL REFERENCES tbl_wl_users(id) ON DELETE CASCADE,
     endpoint_key  VARCHAR(16) NOT NULL UNIQUE,
     label         VARCHAR(100),
+    response_code SMALLINT NOT NULL DEFAULT 200,
+    response_body TEXT,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     is_active     BOOLEAN NOT NULL DEFAULT TRUE
 );
+
+ALTER TABLE tbl_wl_endpoints ADD COLUMN IF NOT EXISTS response_code SMALLINT NOT NULL DEFAULT 200;
+ALTER TABLE tbl_wl_endpoints ADD COLUMN IF NOT EXISTS response_body TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_wl_endpoints_key ON tbl_wl_endpoints(endpoint_key);
 CREATE INDEX IF NOT EXISTS idx_wl_endpoints_user_id ON tbl_wl_endpoints(user_id);

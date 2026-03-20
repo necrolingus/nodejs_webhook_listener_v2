@@ -9,6 +9,16 @@
     <label for="endpointLabel">Label (optional)</label>
     <input type="text" id="endpointLabel" class="form-input" placeholder="Give your endpoint a name">
   </div>
+  <div class="form-row">
+    <div class="form-group form-group--inline">
+      <label for="endpointResponseCode">Response Code</label>
+      <input type="number" id="endpointResponseCode" class="form-input" value="200" min="100" max="999" step="1">
+    </div>
+    <div class="form-group form-group--fill">
+      <label for="endpointResponseBody">Response Body (optional)</label>
+      <textarea id="endpointResponseBody" class="form-input form-textarea" rows="3" placeholder='{"status": "ok"}'></textarea>
+    </div>
+  </div>
   <div class="form-actions">
     <button class="btn btn--primary" id="submitEndpoint">Create</button>
     <button class="btn btn--ghost" id="cancelEndpoint">Cancel</button>

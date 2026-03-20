@@ -12,13 +12,21 @@ router.use(requireAuth);
 
 // Create endpoint
 router.post('/endpoints', async (req, res) => {
-  const { label } = req.body;
+  const { label, response_code, response_body } = req.body;
   const count = await endpointModel.countEndpointsByUserId(req.user.id);
   if (count >= config.maxEndpointsPerUser) {
     return res.status(400).json({ error: `Maximum ${config.maxEndpointsPerUser} endpoints allowed` });
   }
+  // Validate response code: must be a 3-digit integer
+  let code = 200;
+  if (response_code !== undefined && response_code !== '') {
+    code = parseInt(response_code, 10);
+    if (isNaN(code) || code < 100 || code > 999) {
+      return res.status(400).json({ error: 'Response code must be a 3-digit number (100-999)' });
+    }
+  }
   const endpointKey = crypto.randomBytes(8).toString('hex');
-  const endpoint = await endpointModel.createEndpoint(req.user.id, endpointKey, label);
+  const endpoint = await endpointModel.createEndpoint(req.user.id, endpointKey, label, code, response_body);
   res.status(201).json(endpoint);
 });
 
@@ -26,6 +34,23 @@ router.post('/endpoints', async (req, res) => {
 router.get('/endpoints', async (req, res) => {
   const endpoints = await endpointModel.findEndpointsByUserId(req.user.id);
   res.json(endpoints);
+});
+
+// Update endpoint response settings
+router.patch('/endpoints/:key', async (req, res) => {
+  const { response_code, response_body } = req.body;
+  let code = 200;
+  if (response_code !== undefined && response_code !== '') {
+    code = parseInt(response_code, 10);
+    if (isNaN(code) || code < 100 || code > 999) {
+      return res.status(400).json({ error: 'Response code must be a 3-digit number (100-999)' });
+    }
+  }
+  const endpoint = await endpointModel.updateEndpointResponse(req.params.key, req.user.id, code, response_body);
+  if (!endpoint) {
+    return res.status(404).json({ error: 'Endpoint not found' });
+  }
+  res.json(endpoint);
 });
 
 // Delete endpoint

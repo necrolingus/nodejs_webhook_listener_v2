@@ -1,11 +1,19 @@
 import { query } from '../db/pool.js';
 
-export async function createEndpoint(userId, endpointKey, label) {
+export async function createEndpoint(userId, endpointKey, label, responseCode = 200, responseBody = null) {
   const result = await query(
-    'INSERT INTO tbl_wl_endpoints (user_id, endpoint_key, label) VALUES ($1, $2, $3) RETURNING *',
-    [userId, endpointKey, label || null]
+    'INSERT INTO tbl_wl_endpoints (user_id, endpoint_key, label, response_code, response_body) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+    [userId, endpointKey, label || null, responseCode, responseBody || null]
   );
   return result.rows[0];
+}
+
+export async function updateEndpointResponse(endpointKey, userId, responseCode, responseBody) {
+  const result = await query(
+    'UPDATE tbl_wl_endpoints SET response_code = $1, response_body = $2 WHERE endpoint_key = $3 AND user_id = $4 RETURNING *',
+    [responseCode, responseBody || null, endpointKey, userId]
+  );
+  return result.rows[0] || null;
 }
 
 export async function findEndpointByKey(key) {
