@@ -2,12 +2,32 @@ import { Router } from 'express';
 import crypto from 'crypto';
 import { config } from '../config/index.js';
 import { requireAuth, optionalAuth } from '../middleware/auth.js';
+import { createRateLimiter } from '../middleware/rateLimit.js';
 import * as userModel from '../models/userModel.js';
 import * as sessionModel from '../models/sessionModel.js';
 import * as endpointModel from '../models/endpointModel.js';
 import * as webhookModel from '../models/webhookModel.js';
 
+// 5 recovery attempts per IP per 15 minutes
+const recoveryLimiter = createRateLimiter(5, 15 * 60 * 1000);
+
 const router = Router();
+
+function setSessionCookie(res, token) {
+  res.cookie(config.cookie.name, token, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: false,
+    maxAge: config.cookie.maxAgeDays * 24 * 60 * 60 * 1000,
+  });
+}
+
+async function createSessionForUser(userId) {
+  const sessionToken = crypto.randomBytes(48).toString('hex');
+  const expiresAt = new Date(Date.now() + config.cookie.maxAgeDays * 24 * 60 * 60 * 1000);
+  await sessionModel.createSession(userId, sessionToken, expiresAt);
+  return sessionToken;
+}
 
 // Landing page
 router.get('/', optionalAuth, (req, res) => {
@@ -25,43 +45,32 @@ router.get('/login', optionalAuth, (req, res) => {
   res.render('pages/login', { layout: 'main', title: 'Login', error: null, recoveryToken: null });
 });
 
-// Login with Cookie (create new user)
-router.post('/login', async (req, res) => {
+// Login with Cookie (create new user or recover)
+router.post('/login', async (req, res, next) => {
   const { action, recovery_token } = req.body;
 
   if (action === 'create') {
     const recoveryToken = crypto.randomBytes(6).toString('hex');
     const user = await userModel.createUser(recoveryToken);
-    const sessionToken = crypto.randomBytes(48).toString('hex');
-    const expiresAt = new Date(Date.now() + config.cookie.maxAgeDays * 24 * 60 * 60 * 1000);
-    await sessionModel.createSession(user.id, sessionToken, expiresAt);
-    res.cookie(config.cookie.name, sessionToken, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: false,
-      maxAge: config.cookie.maxAgeDays * 24 * 60 * 60 * 1000,
-    });
+    const sessionToken = await createSessionForUser(user.id);
+    setSessionCookie(res, sessionToken);
     return res.render('pages/login', { layout: 'main', title: 'Account Created', error: null, recoveryToken });
   }
 
   if (action === 'recover') {
-    if (!recovery_token || !recovery_token.trim()) {
-      return res.render('pages/login', { layout: 'main', title: 'Login', error: 'Please enter a recovery token', recoveryToken: null });
-    }
-    const user = await userModel.findUserByRecoveryToken(recovery_token.trim());
-    if (!user) {
-      return res.render('pages/login', { layout: 'main', title: 'Login', error: 'Invalid recovery token', recoveryToken: null });
-    }
-    const sessionToken = crypto.randomBytes(48).toString('hex');
-    const expiresAt = new Date(Date.now() + config.cookie.maxAgeDays * 24 * 60 * 60 * 1000);
-    await sessionModel.createSession(user.id, sessionToken, expiresAt);
-    res.cookie(config.cookie.name, sessionToken, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: false,
-      maxAge: config.cookie.maxAgeDays * 24 * 60 * 60 * 1000,
+    // Run rate limiter for recovery attempts only
+    return recoveryLimiter(req, res, async () => {
+      if (!recovery_token || !recovery_token.trim()) {
+        return res.render('pages/login', { layout: 'main', title: 'Login', error: 'Please enter a recovery token', recoveryToken: null });
+      }
+      const user = await userModel.findUserByRecoveryToken(recovery_token.trim());
+      if (!user) {
+        return res.render('pages/login', { layout: 'main', title: 'Login', error: 'Invalid recovery token', recoveryToken: null });
+      }
+      const sessionToken = await createSessionForUser(user.id);
+      setSessionCookie(res, sessionToken);
+      return res.redirect('/dashboard');
     });
-    return res.redirect('/dashboard');
   }
 
   res.redirect('/login');

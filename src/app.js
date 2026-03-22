@@ -3,6 +3,7 @@ import { engine } from 'express-handlebars';
 import cookieParser from 'cookie-parser';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { config } from './config/index.js';
 import { headers } from './middleware/headers.js';
 import { pageRouter, apiRouter, webhookReceiverRouter } from './routes/index.js';
 
@@ -10,6 +11,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 app.disable('x-powered-by');
+if (config.trustProxy > 0) {
+  app.set('trust proxy', config.trustProxy);
+}
 
 // Handlebars setup
 app.engine('hbs', engine({

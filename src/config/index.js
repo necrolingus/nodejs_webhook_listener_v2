@@ -3,6 +3,7 @@ dotenv.config();
 
 export const config = Object.freeze({
   port: parseInt(process.env.WL_PORT, 10) || 3000,
+  trustProxy: parseInt(process.env.WL_TRUST_PROXY, 10) || 0,
   maxItemsPerEndpoint: parseInt(process.env.WL_MAX_ITEMS_PER_ENDPOINT, 10) || 50,
   maxEndpointsPerUser: parseInt(process.env.WL_MAX_ENDPOINTS_PER_USER, 10) || 20,
   cookie: {
