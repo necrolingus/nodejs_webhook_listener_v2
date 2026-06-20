@@ -18,7 +18,8 @@
     "express": "^4.22.2",
     "express-handlebars": "^8.0.1",
     "express-rate-limit": "^8.3.1",
-    "uuid": "^14.0.1"
+    "pg": "^8.13.1",
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "supertest": "^7.0.0"
