@@ -23,7 +23,7 @@ export async function findUserByRecoveryToken(token) {
 
 export async function updateDisplayName(userId, name) {
   const result = await query(
-    'UPDATE tbl_wl_users SET display_name = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
+    'UPDATE tbl_wl_users SET display_name = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
     [name, userId]
   );
   return result.rows[0] || null;

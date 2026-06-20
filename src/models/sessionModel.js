@@ -13,7 +13,7 @@ export async function findSessionByToken(token) {
     `SELECT s.*, u.id AS uid, u.recovery_token, u.display_name, u.created_at AS user_created_at
      FROM tbl_wl_sessions s
      JOIN tbl_wl_users u ON s.user_id = u.id
-     WHERE s.session_token = $1 AND s.expires_at > NOW()`,
+     WHERE s.session_token = $1 AND datetime(s.expires_at) > datetime('now')`,
     [token]
   );
   if (!result.rows[0]) return null;
@@ -33,6 +33,6 @@ export async function deleteSession(sessionToken) {
 }
 
 export async function deleteExpiredSessions() {
-  const result = await query('DELETE FROM tbl_wl_sessions WHERE expires_at < NOW()');
+  const result = await query("DELETE FROM tbl_wl_sessions WHERE datetime(expires_at) < datetime('now')");
   return result.rowCount;
 }

@@ -35,7 +35,7 @@ export async function deleteOldWebhooks(endpointId, maxItems) {
        SELECT id FROM tbl_wl_webhooks
        WHERE endpoint_id = $1
        ORDER BY received_at DESC
-       OFFSET $2
+       LIMIT -1 OFFSET $2
      )`,
     [endpointId, maxItems]
   );

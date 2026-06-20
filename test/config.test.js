@@ -17,10 +17,7 @@ describe('Config', () => {
   });
 
   it('should load database settings', () => {
-    assert.strictEqual(typeof config.db.host, 'string');
-    assert.strictEqual(typeof config.db.port, 'number');
-    assert.strictEqual(typeof config.db.database, 'string');
-    assert.strictEqual(typeof config.db.user, 'string');
+    assert.strictEqual(typeof config.db.file, 'string');
   });
 
   it('should load max items per endpoint', () => {

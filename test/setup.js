@@ -1,5 +1,7 @@
+import './env.js';
 import { query, pool } from '../src/db/pool.js';
 import { migrate } from '../src/db/migrate.js';
+import { rmSync } from 'fs';
 
 let migrated = false;
 
@@ -19,6 +21,16 @@ export async function cleanDatabase() {
 
 export async function closeDatabase() {
   await pool.end();
+  const dbFile = process.env.DB_FILE;
+  if (dbFile) {
+    try {
+      rmSync(dbFile, { force: true });
+      rmSync(`${dbFile}-wal`, { force: true });
+      rmSync(`${dbFile}-shm`, { force: true });
+    } catch (err) {
+      // Ignored
+    }
+  }
 }
 
 export { query };
