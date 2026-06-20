@@ -5,7 +5,7 @@ A self-hosted webhook listener with a dark-themed web UI, cookie-based authentic
 ## Features
 
 - **Cookie-based auth** — no passwords. Click "Login with Cookie" to get started. A recovery token lets you reclaim your data if the cookie expires.
-- **Persistent storage** — all data lives in PostgreSQL (tables prefixed `tbl_wl_`).
+- **Persistent storage** — all data lives in SQLite (tables prefixed `tbl_wl_`).
 - **Web UI** — dark theme, collapsible sidebar, desktop-first layout.
 - **Multi-endpoint** — create up to 20 endpoints per user (configurable).
 - **Request capture** — captures headers, cookies, query params, and body for GET, POST, PUT, PATCH, and DELETE.
@@ -17,8 +17,7 @@ A self-hosted webhook listener with a dark-themed web UI, cookie-based authentic
 
 ### Prerequisites
 
-- Node.js 20+
-- PostgreSQL 15+
+- Node.js 24+ (utilizes built-in native SQLite)
 
 ### 1. Clone and install
 
@@ -64,7 +63,7 @@ Open `http://localhost:<WL_PORT>` in your browser.
 docker-compose up -d
 ```
 
-This starts both the webhook listener and a PostgreSQL instance. Make sure your `.env` file is configured — the compose file passes it to both containers.
+This starts the webhook listener container and maps a persistent volume for the SQLite database. Make sure your `.env` file is configured.
 
 ### Dockerfile only
 
@@ -83,13 +82,7 @@ docker run --env-file .env -p 3088:3088 webhook-listener
 | `WL_COOKIE_NAME` | Name of the session cookie | `wl_session` |
 | `WL_COOKIE_MAX_AGE_DAYS` | Session cookie lifetime in days | `30` |
 | `WL_COOKIE_SECRET` | Secret used to sign cookies — **change this** | — |
-| `DB_HOST` | PostgreSQL host | `localhost` |
-| `DB_PORT` | PostgreSQL port | `5432` |
-| `DB_NAME` | PostgreSQL database name | `postgres` |
-| `DB_USER` | PostgreSQL user | `postgres` |
-| `DB_PASS` | PostgreSQL password | — |
-| `POSTGRES_USER` | Used by the postgres Docker image on first start (set same as `DB_USER`) | — |
-| `POSTGRES_PASSWORD` | Used by the postgres Docker image on first start (set same as `DB_PASS`) | — |
+| `DB_FILE` | SQLite database file path | `data/webhook_listener.db` |
 | `WL_ADMIN_KEY` | API key for the admin endpoint (see below) | *(empty — admin endpoint disabled)* |
 
 ## Admin API (`WL_ADMIN_KEY`)
@@ -163,7 +156,7 @@ All tables are prefixed with `tbl_wl_`:
 - **tbl_wl_users** — user accounts with recovery tokens
 - **tbl_wl_sessions** — active sessions tied to users
 - **tbl_wl_endpoints** — webhook endpoints owned by users
-- **tbl_wl_webhooks** — captured webhook requests (headers, cookies, query params, body stored as JSONB)
+- **tbl_wl_webhooks** — captured webhook requests (headers, cookies, query params, body stored as text and automatically parsed into JSON on query retrieval)
 
 The schema auto-migrates on startup using `src/db/schema.sql`.
 
@@ -173,7 +166,7 @@ The schema auto-migrates on startup using `src/db/schema.sql`.
 npm test
 ```
 
-Tests use the Node.js built-in test runner with `supertest`. They run against your configured PostgreSQL database, so make sure it is accessible.
+Tests use the Node.js built-in test runner with `supertest`. They run against an isolated SQLite test database file (`data/webhook_listener_test_*.db`) that is automatically created and cleaned up during the test run.
 
 ## Project Structure
 
