@@ -46,6 +46,9 @@ a {
   color: var(--accent);
   text-decoration: none;
 }
+a:visited {
+  color: var(--accent);
+}
 a:hover {
   color: var(--accent-hover);
 }
@@ -802,6 +805,29 @@ body.sidebar-collapsed .sidebar__toggle {
 .login-hero__subtitle {
   color: var(--text-secondary);
   font-size: 1rem;
+}
+
+.login-hero__github {
+  margin-top: 0.75rem;
+}
+
+.login-hero__github-link,
+.login-hero__github-link:link,
+.login-hero__github-link:visited,
+.login-hero__github-link:hover,
+.login-hero__github-link:active,
+.login-hero__github-link:focus {
+  color: #ffffff !important;
+  text-decoration: underline;
+  font-size: 0.95rem;
+  word-break: break-all;
+  display: inline-block;
+  transition: opacity var(--transition);
+}
+
+.login-hero__github-link:hover {
+  opacity: 0.8;
+  color: #ffffff !important;
 }
 
 .login-cards {
